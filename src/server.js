@@ -1,12 +1,13 @@
-// npn init -m
-// npm install express
-// npm install nodemon -D   --- Serve para reiniciar o server sozinho
-// npm install nunjucks     --- serve para transformar o HTML em um arquivo inteligente (template engine)
 const express = require('express')
 const server = express()
 
+const db = require('./database/db')
+
 // configurar pasta public
 server.use(express.static('public'))
+
+// habilitar o req.body
+server.use(express.urlencoded({extended: true}))
 
 // template engine
 const nunjucks = require('nunjucks')
@@ -24,11 +25,77 @@ server.get('/', (req, res) => {
 })
 // create-point
 server.get('/create-point', (req, res) => {
+    
+    // console.log(req.query)
+
     return res.render('create-point.html')
 })
+
+server.post('/save-point', (req, res) => {
+        
+    // console.log(req.body)
+
+    // inserir dados no db
+    const query = `
+        INSERT INTO places (
+            image,
+            name,
+            address,
+            address2,
+            state,
+            city,
+            items
+        ) VALUES (?, ?, ?, ?, ?, ?, ?);
+    `
+
+    const values = [
+        req.body.image,
+        req.body.name,
+        req.body.address,
+        req.body.address2,
+        req.body.state,
+        req.body.city,
+        req.body.items
+    ]
+
+    function afterInsertData(err) {
+        if(err) {
+            console.log(err)
+            return res.send('Erro no Cadastro')
+        }
+
+        console.log('Cadastrado com sucesso')
+        console.log(this)
+
+        return res.render('create-point.html', {saved: true})
+    }
+
+    db.run(query, values, afterInsertData)
+})
+
 // search-result
 server.get('/search-results', (req, res) => {
-    return res.render('search-results.html')
+
+    const search = req.query.search
+
+    if(search == '') {
+        return res.render('search-results.html', {total: 0})
+    }
+
+    // pegar os dados do db
+    db.all(`SELECT * FROM places WHERE city like '%${search}%'`, function(err, rows) {
+
+        if(err) {
+            console.log(err)
+            return res.send('Erro na Consulta')
+        }
+        console.log('Registros retornados com sucesso!')
+
+        const total = rows.length
+
+        // mostrar a página HTML com os dados do db
+        return res.render('search-results.html', {places: rows, total})
+    })
 })
 
 // ligar o server

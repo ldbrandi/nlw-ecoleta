@@ -1,11 +1,20 @@
+body {
+    background-color: white;
+}
+
 body::after {
     content: '';
-    position: fixed;
-    background: white;
-    top: 260px;
+
+    /* position: fixed; */
+    position: absolute;
+    background: #f0f0f5;
+
+    top: 0;
     right: 0;
     left: 0;
     bottom: 0;
+
+    height: 16rem; /*posição relativa ao tamanho da página*/
     z-index: -1;
 }
 
@@ -49,6 +58,7 @@ main {
 main h4 {
     font-weight: normal;
     font-family: Roboto, sans-serif;
+    font-size: 18px;
 
     margin-bottom: 32px;
 }
